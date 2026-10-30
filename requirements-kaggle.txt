@@ -1,0 +1,8 @@
+# Kaggle images already provide: torch, torchvision, numpy, pandas, scipy, pillow,
+# scikit-learn, matplotlib, tqdm. Do NOT reinstall them (it can break the CUDA build).
+lightning>=2.2
+torchmetrics>=1.3
+ftfy
+regex
+tensorboard
+git+https://github.com/openai/CLIP.git

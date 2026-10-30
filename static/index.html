@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>X-AdaCBM: Explainable Medical AI Diagnostic Platform</title>
+    <meta name="description" content="Adaptive Concept Bottleneck Model for Dermatological Diagnosis with Cross-Modal Concept Attention and Doctor-in-the-Loop Interventions.">
+    <!-- Modern Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-primary: #080c16;
+            --bg-secondary: #0f172a;
+            --bg-card: rgba(17, 26, 47, 0.75);
+            --bg-glass: rgba(255, 255, 255, 0.04);
+            --border-glow: rgba(56, 189, 248, 0.25);
+            --border-subtle: rgba(255, 255, 255, 0.08);
+            
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            
+            --accent-cyan: #06b6d4;
+            --accent-blue: #3b82f6;
+            --accent-teal: #14b8a6;
+            --accent-emerald: #10b981;
+            --accent-amber: #f59e0b;
+            --accent-rose: #f43f5e;
+            --accent-purple: #8b5cf6;
+            
+            --shadow-glow: 0 0 25px rgba(6, 182, 212, 0.15);
+            --font-heading: 'Outfit', sans-serif;
+            --font-body: 'Inter', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: var(--font-body);
+            min-height: 100vh;
+            line-height: 1.5;
+            background-image: 
+                radial-gradient(circle at 15% 10%, rgba(6, 182, 212, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 85% 85%, rgba(139, 92, 246, 0.08) 0%, transparent 40%);
+            background-attachment: fixed;
+            padding: 24px;
+        }
+
+        .container {
+            max-width: 1440px;
+            margin: 0 auto;
+        }
+
+        /* Top Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-subtle);
+            margin-bottom: 28px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .logo-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #06b6d4, #3b82f6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 15px rgba(6, 182, 212, 0.4);
+            font-family: var(--font-heading);
+            font-weight: 800;
+            font-size: 20px;
+            color: #fff;
+        }
+
+        .header-titles h1 {
+            font-family: var(--font-heading);
+            font-size: 26px;
+            font-weight: 700;
+            background: linear-gradient(to right, #ffffff, #93c5fd, #67e8f9);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-titles p {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .badges {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-reproduce {
+            background: rgba(59, 130, 246, 0.15);
+            color: #60a5fa;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .badge-novelty {
+            background: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .badge-dataset {
+            background: rgba(245, 158, 11, 0.15);
+            color: #fbbf24;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        /* Sample Selector Ribbon */
+        .sample-ribbon {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 28px;
+            backdrop-filter: blur(12px);
+        }
+
+        .sample-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .samples-carousel {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+        }
+
+        .samples-carousel::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .samples-carousel::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 3px;
+        }
+
+        .sample-card {
+            flex: 0 0 auto;
+            width: 90px;
+            cursor: pointer;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 2px solid transparent;
+            transition: all 0.2s ease;
+            background: #000;
+            position: relative;
+        }
+
+        .sample-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--accent-cyan);
+            box-shadow: 0 4px 12px rgba(6, 182, 212, 0.2);
+        }
+
+        .sample-card.active {
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 14px rgba(6, 182, 212, 0.5);
+        }
+
+        .sample-card img {
+            width: 100%;
+            height: 70px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .sample-card span {
+            display: block;
+            font-size: 9px;
+            text-align: center;
+            padding: 4px;
+            background: rgba(15, 23, 42, 0.9);
+            color: var(--text-secondary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Main Dashboard Grid */
+        .grid-layout {
+            display: grid;
+            grid-template-columns: 420px 1fr;
+            gap: 24px;
+        }
+
+        @media (max-width: 1024px) {
+            .grid-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 18px;
+            padding: 24px;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            margin-bottom: 24px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .card-title {
+            font-family: var(--font-heading);
+            font-size: 17px;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-title svg {
+            width: 20px;
+            height: 20px;
+            color: var(--accent-cyan);
+        }
+
+        /* Image Display & Upload */
+        .image-preview-container {
+            width: 100%;
+            height: 280px;
+            border-radius: 14px;
+            overflow: hidden;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--border-subtle);
+            position: relative;
+            margin-bottom: 16px;
+        }
+
+        .image-preview-container img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .upload-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #0284c7, #2563eb);
+            color: #fff;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            opacity: 0.92;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border-subtle);
+            color: var(--text-secondary);
+        }
+
+        .btn-outline:hover {
+            border-color: var(--accent-cyan);
+            color: var(--text-primary);
+        }
+
+        .btn-reset {
+            background: rgba(244, 63, 94, 0.15);
+            color: #fb7185;
+            border: 1px solid rgba(244, 63, 94, 0.3);
+        }
+
+        .btn-reset:hover {
+            background: rgba(244, 63, 94, 0.25);
+        }
+
+        /* Comparison Diagnosis Panel */
+        .comparison-bars {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .model-diag-box {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            padding: 14px;
+        }
+
+        .model-diag-box.highlight {
+            border-color: rgba(6, 182, 212, 0.4);
+            background: rgba(6, 182, 212, 0.03);
+        }
+
+        .diag-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .model-name {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .pred-badge {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--accent-cyan);
+        }
+
+        .prob-bar-container {
+            height: 10px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 5px;
+            overflow: hidden;
+            margin-bottom: 6px;
+            position: relative;
+        }
+
+        .prob-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #06b6d4, #3b82f6);
+            border-radius: 5px;
+            transition: width 0.4s ease;
+        }
+
+        .diag-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        /* Concepts Attribution Panel */
+        .concept-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .intervention-badge {
+            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            background: rgba(16, 185, 129, 0.12);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.25);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .concept-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 14px;
+            max-height: 520px;
+            overflow-y: auto;
+            padding-right: 6px;
+        }
+
+        .concept-cards-grid::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .concept-cards-grid::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 3px;
+        }
+
+        .concept-item {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            padding: 14px;
+            transition: all 0.2s ease;
+        }
+
+        .concept-item:hover {
+            border-color: rgba(6, 182, 212, 0.3);
+            background: rgba(255, 255, 255, 0.035);
+        }
+
+        .c-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+            gap: 8px;
+        }
+
+        .c-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .c-target {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text-secondary);
+            white-space: nowrap;
+        }
+
+        .c-slider-area {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 6px;
+        }
+
+        .c-slider {
+            flex: 1;
+            accent-color: var(--accent-cyan);
+            cursor: pointer;
+        }
+
+        .c-score-val {
+            font-size: 12px;
+            font-weight: 700;
+            width: 44px;
+            text-align: right;
+            font-family: monospace;
+            color: var(--accent-cyan);
+        }
+
+        .c-stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* Methodology Diagram Card */
+        .methodology-box {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-top: 10px;
+        }
+
+        @media (max-width: 800px) {
+            .methodology-box {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .method-step {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            padding: 14px;
+            text-align: center;
+        }
+
+        .step-num {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            line-height: 24px;
+            border-radius: 50%;
+            background: rgba(6, 182, 212, 0.2);
+            color: var(--accent-cyan);
+            font-size: 12px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .step-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .step-desc {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        /* Loading Overlay */
+        .loading-spinner {
+            display: none;
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(8, 12, 22, 0.7);
+            backdrop-filter: blur(4px);
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+
+        .spinner {
+            width: 36px;
+            height: 36px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            border-top-color: var(--accent-cyan);
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <div class="logo-area">
+                <div class="logo-icon">X</div>
+                <div class="header-titles">
+                    <h1>X-AdaCBM: Explainable Medical Diagnostic AI</h1>
+                    <p>Cross-Modal Concept-Guided Attention Adaptive Concept Bottleneck Model</p>
+                </div>
+            </div>
+            <div class="badges">
+                <span class="badge badge-reproduce">MICCAI 2024 Reproduction</span>
+                <span class="badge badge-novelty">Novel Cross-Attention</span>
+                <span class="badge badge-dataset">HAM10000 Skin Lesion</span>
+            </div>
+        </header>
+
+        <!-- Sample Ribbon -->
+        <div class="sample-ribbon">
+            <div class="sample-title">
+                <span>Select a Real Dermatoscopic Test Image (HAM10000 Dataset)</span>
+                <span id="sample-count-badge">14 Test Cases Available</span>
+            </div>
+            <div class="samples-carousel" id="samples-carousel">
+                <!-- Populated via JS -->
+            </div>
+        </div>
+
+        <!-- Main Grid -->
+        <div class="grid-layout">
+            <!-- Left Column: Image & Diagnostic Predictions -->
+            <div class="col-left">
+                <div class="card" style="position: relative;">
+                    <div class="loading-spinner" id="loading-spinner">
+                        <div class="spinner"></div>
+                    </div>
+
+                    <div class="card-header">
+                        <div class="card-title">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                            Dermatoscopic Image
+                        </div>
+                        <span id="current-filename" style="font-size: 11px; color: var(--text-muted);">ISIC_0030143.jpg</span>
+                    </div>
+
+                    <div class="image-preview-container">
+                        <img id="image-display" src="/static/placeholder.jpg" alt="Skin Lesion Image">
+                    </div>
+
+                    <div class="upload-row">
+                        <input type="file" id="image-upload-input" accept="image/*" style="display: none;">
+                        <button class="btn" id="upload-btn" onclick="document.getElementById('image-upload-input').click();">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                            Upload Custom Image
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Comparative Diagnostic Output -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                            Comparative Diagnostic Outcome
+                        </div>
+                    </div>
+
+                    <div class="comparison-bars">
+                        <!-- AdaCBM (MICCAI 2024 Baseline) -->
+                        <div class="model-diag-box">
+                            <div class="diag-header">
+                                <span class="model-name">AdaCBM (Original Baseline)</span>
+                                <span class="pred-badge" id="adacbm-pred">Analyzing...</span>
+                            </div>
+                            <div class="prob-bar-container">
+                                <div class="prob-bar-fill" id="adacbm-bar" style="width: 0%;"></div>
+                            </div>
+                            <div class="diag-meta">
+                                <span>Architecture: Frozen CLIP + 2-Layer Static MLP</span>
+                                <span id="adacbm-conf">0.0%</span>
+                            </div>
+                        </div>
+
+                        <!-- X-AdaCBM (Proposed Novel Architecture) -->
+                        <div class="model-diag-box highlight">
+                            <div class="diag-header">
+                                <span class="model-name" style="color: var(--accent-cyan);">X-AdaCBM (Our Novel Contribution)</span>
+                                <span class="pred-badge" id="xadacbm-pred" style="color: #38bdf8;">Analyzing...</span>
+                            </div>
+                            <div class="prob-bar-container">
+                                <div class="prob-bar-fill" id="xadacbm-bar" style="width: 0%; background: linear-gradient(90deg, #38bdf8, #10b981);"></div>
+                            </div>
+                            <div class="diag-meta">
+                                <span>Architecture: Multi-Head Cross-Modal Concept Attention</span>
+                                <span id="xadacbm-conf" style="color: #38bdf8; font-weight: 700;">0.0%</span>
+                            </div>
+                        </div>
+
+                        <!-- Counterfactual Intervention Result -->
+                        <div class="model-diag-box" id="intervention-result-box" style="display: none; border-color: rgba(245, 158, 11, 0.4); background: rgba(245, 158, 11, 0.03);">
+                            <div class="diag-header">
+                                <span class="model-name" style="color: var(--accent-amber);">Doctor Override (Counterfactual Diagnosis)</span>
+                                <span class="pred-badge" id="intervened-pred" style="color: var(--accent-amber);">--</span>
+                            </div>
+                            <div class="prob-bar-container">
+                                <div class="prob-bar-fill" id="intervened-bar" style="width: 0%; background: linear-gradient(90deg, #f59e0b, #ef4444);"></div>
+                            </div>
+                            <div class="diag-meta">
+                                <span>Result recalculated via Concept Bottleneck W &times; M</span>
+                                <span id="intervened-conf" style="color: var(--accent-amber); font-weight: 700;">0.0%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Doctor-in-the-Loop Concept Bottleneck Panel -->
+            <div class="col-right">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+                            Explainable Concept Bottleneck &amp; Doctor Intervention
+                        </div>
+                        <div class="intervention-badge">
+                            <svg width="12" height="12" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                            Clinician-in-the-Loop Active
+                        </div>
+                    </div>
+
+                    <div class="concept-controls">
+                        <span style="font-size: 12px; color: var(--text-secondary);">
+                            Top active concepts identified by CLIP + X-AdaCBM. Adjust sliders to simulate a doctor overriding diagnostic criteria:
+                        </span>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="btn btn-outline" id="revert-btn" onclick="resetInterventions();">Reset Sliders</button>
+                            <button class="btn" id="apply-btn" onclick="applyIntervention();" style="background: linear-gradient(135deg, #10b981, #059669);">
+                                Recalculate Diagnosis
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="concept-cards-grid" id="concept-cards-container">
+                        <!-- Populated dynamically via JS -->
+                    </div>
+                </div>
+
+                <!-- Architectural Innovation Box for Presentation -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                            Novelty Architecture: How X-AdaCBM Advances Beyond AdaCBM
+                        </div>
+                    </div>
+                    <div class="methodology-box">
+                        <div class="method-step">
+                            <div class="step-num">1</div>
+                            <div class="step-title">Vision-Language</div>
+                            <div class="step-desc">Pretrained ViT-L/14 extracts zero-shot visual features and 70 medical text concepts.</div>
+                        </div>
+                        <div class="method-step">
+                            <div class="step-num">2</div>
+                            <div class="step-title">AdaCBM Baseline</div>
+                            <div class="step-desc">Transforms image via static MLP, blind to what concepts are being queried.</div>
+                        </div>
+                        <div class="method-step" style="border-color: rgba(6, 182, 212, 0.4); background: rgba(6, 182, 212, 0.04);">
+                            <div class="step-num" style="background: var(--accent-cyan); color: #000;">★</div>
+                            <div class="step-title" style="color: var(--accent-cyan);">Our Novelty (CACL)</div>
+                            <div class="step-desc">Multi-Head Cross-Attention conditions image adaptation dynamically on concept semantics.</div>
+                        </div>
+                        <div class="method-step">
+                            <div class="step-num">4</div>
+                            <div class="step-title">Transparent Decision</div>
+                            <div class="step-desc">Final diagnosis computed via sparse linear mapping, preserving 100% human explainability.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentPredictionData = null;
+        let originalConceptScores = [];
+        let modifiedConceptScores = [];
+
+        // Fetch sample images on startup
+        async function loadSampleImages() {
+            try {
+                const res = await fetch('/api/samples');
+                const samples = await res.json();
+                const container = document.getElementById('samples-carousel');
+                container.innerHTML = '';
+
+                samples.forEach((sample, idx) => {
+                    const card = document.createElement('div');
+                    card.className = `sample-card ${idx === 0 ? 'active' : ''}`;
+                    card.onclick = () => selectSample(sample.filename, card);
+                    card.innerHTML = `
+                        <img src="${sample.url}" alt="${sample.filename}">
+                        <span>${sample.filename}</span>
+                    `;
+                    container.appendChild(card);
+                });
+
+                if (samples.length > 0) {
+                    selectSample(samples[0].filename, container.children[0]);
+                }
+            } catch (err) {
+                console.error("Error loading sample images:", err);
+            }
+        }
+
+        async function selectSample(filename, cardEl) {
+            document.querySelectorAll('.sample-card').forEach(c => c.classList.remove('active'));
+            if (cardEl) cardEl.classList.add('active');
+
+            document.getElementById('current-filename').innerText = filename;
+            document.getElementById('image-display').src = `/api/image/${filename}`;
+            document.getElementById('loading-spinner').style.display = 'flex';
+            document.getElementById('intervention-result-box').style.display = 'none';
+
+            try {
+                const formData = new FormData();
+                formData.append('filename', filename);
+                const res = await fetch('/api/predict_sample', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                renderPredictions(data);
+            } catch (err) {
+                console.error("Prediction error:", err);
+            } finally {
+                document.getElementById('loading-spinner').style.display = 'none';
+            }
+        }
+
+        // Handle file upload
+        document.getElementById('image-upload-input').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                document.getElementById('image-display').src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+
+            document.getElementById('current-filename').innerText = file.name;
+            document.querySelectorAll('.sample-card').forEach(c => c.classList.remove('active'));
+            document.getElementById('loading-spinner').style.display = 'flex';
+            document.getElementById('intervention-result-box').style.display = 'none';
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const res = await fetch('/api/predict_upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                renderPredictions(data);
+            } catch (err) {
+                console.error("Upload prediction error:", err);
+            } finally {
+                document.getElementById('loading-spinner').style.display = 'none';
+            }
+        });
+
+        function renderPredictions(data) {
+            currentPredictionData = data;
+            
+            // Record concept scores for interventions
+            originalConceptScores = data.concepts.map(c => c.score_xadacbm);
+            modifiedConceptScores = [...originalConceptScores];
+
+            // Render AdaCBM baseline
+            document.getElementById('adacbm-pred').innerText = data.adacbm.predicted_class;
+            document.getElementById('adacbm-conf').innerText = `${data.adacbm.confidence.toFixed(1)}%`;
+            document.getElementById('adacbm-bar').style.width = `${data.adacbm.confidence}%`;
+
+            // Render Novel X-AdaCBM
+            document.getElementById('xadacbm-pred').innerText = data.xadacbm.predicted_class;
+            document.getElementById('xadacbm-conf').innerText = `${data.xadacbm.confidence.toFixed(1)}%`;
+            document.getElementById('xadacbm-bar').style.width = `${data.xadacbm.confidence}%`;
+
+            // Render Concept Cards
+            const container = document.getElementById('concept-cards-container');
+            container.innerHTML = '';
+
+            data.top_active_concepts.forEach(c => {
+                const card = document.createElement('div');
+                card.className = 'concept-item';
+                card.id = `concept-card-${c.index}`;
+                
+                card.innerHTML = `
+                    <div class="c-header">
+                        <span class="c-name">${c.name}</span>
+                        <span class="c-target">${c.associated_class}</span>
+                    </div>
+                    <div class="c-slider-area">
+                        <input type="range" class="c-slider" min="-5" max="5" step="0.1" 
+                               value="${c.score_xadacbm.toFixed(1)}" 
+                               id="slider-${c.index}"
+                               oninput="updateConceptScore(${c.index}, this.value)">
+                        <span class="c-score-val" id="val-${c.index}">${c.score_xadacbm > 0 ? '+' : ''}${c.score_xadacbm.toFixed(2)}</span>
+                    </div>
+                    <div class="c-stats">
+                        <span>Original: ${c.score_xadacbm.toFixed(2)}</span>
+                        <span>Cross-Attention Saliency: ${(c.cross_attention * 100).toFixed(1)}%</span>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function updateConceptScore(index, value) {
+            modifiedConceptScores[index] = parseFloat(value);
+            const valEl = document.getElementById(`val-${index}`);
+            if (valEl) {
+                const val = parseFloat(value);
+                valEl.innerText = (val > 0 ? '+' : '') + val.toFixed(2);
+                valEl.style.color = '#f59e0b'; // Amber to show override
+            }
+        }
+
+        function resetInterventions() {
+            modifiedConceptScores = [...originalConceptScores];
+            currentPredictionData.top_active_concepts.forEach(c => {
+                const slider = document.getElementById(`slider-${c.index}`);
+                const valEl = document.getElementById(`val-${c.index}`);
+                if (slider) slider.value = c.score_xadacbm.toFixed(1);
+                if (valEl) {
+                    valEl.innerText = (c.score_xadacbm > 0 ? '+' : '') + c.score_xadacbm.toFixed(2);
+                    valEl.style.color = 'var(--accent-cyan)';
+                }
+            });
+            document.getElementById('intervention-result-box').style.display = 'none';
+        }
+
+        async function applyIntervention() {
+            try {
+                const res = await fetch('/api/intervene', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ concept_scores: modifiedConceptScores })
+                });
+                const data = await res.json();
+                
+                // Show counterfactual box
+                const box = document.getElementById('intervention-result-box');
+                box.style.display = 'block';
+                document.getElementById('intervened-pred').innerText = data.predicted_class;
+                document.getElementById('intervened-conf').innerText = `${data.confidence.toFixed(1)}%`;
+                document.getElementById('intervened-bar').style.width = `${data.confidence}%`;
+            } catch (err) {
+                console.error("Intervention error:", err);
+            }
+        }
+
+        // Initialize on load
+        window.addEventListener('DOMContentLoaded', loadSampleImages);
+    </script>
+</body>
+</html>
